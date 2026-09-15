@@ -29,7 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             return \App\Http\Helpers\ResponseJson::error(__('messages.unauthenticated'), 401);
         });
 
-        $exceptions->renderable(function (\DomainException $e) {
-            return \App\Http\Helpers\ResponseJson::error($e->getMessage(), 422);
+        $exceptions->renderable(function (\App\Exceptions\ServiceException $e) {
+            return \App\Http\Helpers\ResponseJson::error($e->getMessage(), $e->getCode());
         });
     })->create();

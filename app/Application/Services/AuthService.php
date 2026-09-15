@@ -3,6 +3,8 @@
 namespace App\Application\Services;
 
 use App\Application\Contracts\Repositories\UserRepository;
+use App\Exceptions\Auth\EmailTakenException;
+use App\Exceptions\Auth\InvalidCredentialException;
 use Illuminate\Support\Facades\Hash;
 
 class AuthService
@@ -14,7 +16,7 @@ class AuthService
     public function register(string $name, string $email, string $password): array
     {
         if ($this->userRepository->existsByEmail($email)) {
-            throw new \DomainException(__('messages.email_taken'));
+            throw new EmailTakenException();
         }
 
         $user = $this->userRepository->create([
@@ -34,7 +36,7 @@ class AuthService
         $user = $this->userRepository->findByEmail($email);
 
         if (! $user || ! Hash::check($password, $user->password)) {
-            throw new \DomainException(__('messages.invalid_credentials'));
+            throw new InvalidCredentialException();
         }
 
         return [
