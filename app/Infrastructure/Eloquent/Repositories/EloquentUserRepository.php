@@ -11,8 +11,18 @@ class EloquentUserRepository implements UserRepository
         private User $model
     ) {}
 
-    public function create($data): User
+    public function create(array $data): User
     {
-        return $this->model->newQuery()->create($data);
+        return $this->model->query()->create($data);
+    }
+
+    public function existsByEmail(string $email): bool
+    {
+        return $this->model->query()->where('email', $email)->exists();
+    }
+
+    public function findByEmail(string $email): ?User
+    {
+        return $this->model->query()->where('email', $email)->first();
     }
 }

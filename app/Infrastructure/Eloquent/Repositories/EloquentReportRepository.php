@@ -14,13 +14,13 @@ class EloquentReportRepository implements ReportRepository
 
     public function listByUserId($userId, array $columns = ['*']): Collection
     {
-        return $this->model->newQuery()
+        return $this->model->query()
             ->where('user_id', $userId)
             ->get($columns);
     }
 
     public function create($data): Report
     {
-        return $this->model->newQuery()->create($data);
+        return $this->model->query()->create($data);
     }
 }
