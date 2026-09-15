@@ -9,5 +9,7 @@ return [
     'logged_in' => 'Logged in successfully.',
     'logged_out' => 'Logged out successfully.',
     'logout_failed' => 'Failed to logout.',
+    'report_created' => 'Report created successfully.',
+    'invalid_frequency' => 'Invalid frequency value.',
     'success' => 'Success.',
 ];

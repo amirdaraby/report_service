@@ -18,6 +18,8 @@ return new class extends Migration
             $table->integer('status');
             $table->integer('frequency');
             $table->jsonb('keywords');
+            $table->timestamp('next_run_at');
+            $table->timestamp('last_run_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

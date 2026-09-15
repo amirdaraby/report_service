@@ -20,6 +20,8 @@ class Report extends Model
         'frequency',
         'status',
         'keywords',
+        'next_run_at',
+        'last_run_at',
     ];
 
     protected function casts(): array
