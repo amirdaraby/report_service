@@ -5,6 +5,8 @@ namespace App\Application\Services;
 use App\Application\Contracts\Repositories\UserRepository;
 use App\Exceptions\Auth\EmailTakenException;
 use App\Exceptions\Auth\InvalidCredentialException;
+use App\Exceptions\Auth\LogoutFailedException;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 class AuthService
@@ -43,5 +45,14 @@ class AuthService
             'user' => $user,
             'token' => $user->createToken('auth-token')->plainTextToken,
         ];
+    }
+
+    public function logout(User $user): void
+    {
+        $deleted = $user->currentAccessToken()->delete();
+
+        if (! $deleted) {
+            throw new LogoutFailedException();
+        }
     }
 }

@@ -8,5 +8,6 @@ return [
     'registered' => 'User registered successfully.',
     'logged_in' => 'Logged in successfully.',
     'logged_out' => 'Logged out successfully.',
+    'logout_failed' => 'Failed to logout.',
     'success' => 'Success.',
 ];
