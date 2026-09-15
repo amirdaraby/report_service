@@ -10,10 +10,10 @@ Route::name('auth.')->prefix('/auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth:sanctum');
 });
 
-Route::name('user.')->prefix('/users')->middleware('auth:sanctum')->group(function () {
+Route::name('users.')->prefix('/users')->middleware('auth:sanctum')->group(function () {
     Route::get('/me', [UserController::class, 'me'])->name('me');
 });
 
-Route::name('report.')->prefix('/reports')->middleware('auth:sanctum')->group(function () {
+Route::name('reports.')->prefix('/reports')->middleware('auth:sanctum')->group(function () {
 
 });
