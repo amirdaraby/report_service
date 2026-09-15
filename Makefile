@@ -35,7 +35,7 @@ init-elastic:
 		curl -fsS -u elastic:$${ELASTIC_PASSWORD} \
 		-X PUT "http://localhost:9200/_security/role/report_service_role" \
 		-H "Content-Type: application/json" \
-		-d '{"cluster":["manage_own_api_key"],"indices":[{"names":["news*"],"privileges":["read","write","create_index","view_index_metadata"]}]}'
+		-d '{"cluster":["manage_own_api_key"],"indices":[{"names":["posts*"],"privileges":["read","write","create_index","view_index_metadata"]}]}'
 	@echo "Creating report_service user..."
 	@docker compose exec -T elasticsearch \
 		curl -fsS -u elastic:$${ELASTIC_PASSWORD} \

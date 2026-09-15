@@ -30,6 +30,8 @@ RUN curl -fL --output /usr/local/bin/pie https://github.com/php/pie/releases/lat
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+RUN pie install pie-extensions/redis
+
 WORKDIR /app
 
 RUN mkdir -p /app/storage/framework/cache /app/storage/framework/sessions /app/storage/framework/views /app/storage/logs \
