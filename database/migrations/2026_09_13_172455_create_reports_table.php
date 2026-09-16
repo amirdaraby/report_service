@@ -22,6 +22,8 @@ return new class extends Migration
             $table->timestamp('last_run_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
+
+            $table->index(['status', 'next_run_at']);
         });
     }
 

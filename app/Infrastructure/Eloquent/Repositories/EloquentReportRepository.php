@@ -23,7 +23,7 @@ final class EloquentReportRepository implements ReportRepository
     {
         return $this->model->query()
             ->where('user_id', $userId)
-            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->paginate($perPage);
     }
 
