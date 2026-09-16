@@ -4,7 +4,7 @@ namespace App\Exceptions\Report;
 
 use App\Exceptions\ServiceException;
 
-class InvalidFrequencyException extends ServiceException
+final class InvalidFrequencyException extends ServiceException
 {
     public function __construct()
     {

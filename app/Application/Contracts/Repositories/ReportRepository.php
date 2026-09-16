@@ -11,4 +11,10 @@ interface ReportRepository
     public function create(array $data): Report;
 
     public function listByUserIdPaginated(int $userId, int $perPage = 15): LengthAwarePaginator;
+
+    public function getDueReports(int $limit): Collection;
+
+    public function findOrFailWithUser(int $id): Report;
+
+    public function update(int $id, array $data): bool;
 }

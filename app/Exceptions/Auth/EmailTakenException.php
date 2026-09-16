@@ -5,7 +5,7 @@ namespace App\Exceptions\Auth;
 use App\Exceptions\ServiceException;
 use Symfony\Component\HttpFoundation\Response;
 
-class EmailTakenException extends ServiceException
+final class EmailTakenException extends ServiceException
 {
     public function __construct()
     {

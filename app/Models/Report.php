@@ -27,9 +27,12 @@ class Report extends Model
     protected function casts(): array
     {
         return [
+            'name' => 'string',
             'frequency' => Frequency::class,
             'status' => Status::class,
             'keywords' => 'array',
+            'last_run_at' => 'datetime',
+            'next_run_at' => 'datetime',
         ];
     }
 

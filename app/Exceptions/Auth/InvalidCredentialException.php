@@ -5,7 +5,7 @@ namespace App\Exceptions\Auth;
 use App\Exceptions\ServiceException;
 use Symfony\Component\HttpFoundation\Response;
 
-class InvalidCredentialException extends ServiceException
+final class InvalidCredentialException extends ServiceException
 {
     public function __construct()
     {

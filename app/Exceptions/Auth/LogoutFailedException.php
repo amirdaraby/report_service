@@ -4,7 +4,7 @@ namespace App\Exceptions\Auth;
 
 use App\Exceptions\ServiceException;
 
-class LogoutFailedException extends ServiceException
+final class LogoutFailedException extends ServiceException
 {
     public function __construct()
     {

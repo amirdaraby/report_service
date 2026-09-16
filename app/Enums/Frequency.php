@@ -2,7 +2,6 @@
 
 namespace App\Enums;
 
-
 use App\Enums\Traits\Values;
 
 enum Frequency: int

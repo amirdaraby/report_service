@@ -5,7 +5,7 @@ namespace App\Infrastructure\Eloquent\Repositories;
 use App\Application\Contracts\Repositories\UserRepository;
 use App\Models\User;
 
-class EloquentUserRepository implements UserRepository
+final class EloquentUserRepository implements UserRepository
 {
     public function __construct(
         private User $model

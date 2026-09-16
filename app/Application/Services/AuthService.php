@@ -9,7 +9,7 @@ use App\Exceptions\Auth\LogoutFailedException;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
-class AuthService
+final class AuthService
 {
     public function __construct(
         private UserRepository $userRepository,
