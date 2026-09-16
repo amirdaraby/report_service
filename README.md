@@ -2,14 +2,24 @@
 
 A Laravel API for scheduled report generation. Users register, create periodic reports (daily/weekly) with keywords, and the system queries Elasticsearch for matching posts, exports them to Excel, and emails the result.
 
+## Table of Contents
+
+- [Stack](#stack)
+- [Setup](#setup)
+- [Artisan Commands](#artisan-commands)
+- [API Endpoints](#api-endpoints)
+- [Architecture](#architecture)
+- [Interview Answers](#interview-answers)
+  - [1. Scaling the System](#1-how-would-you-scale-this-system-when-the-number-of-requests-and-users-increases)
+  - [2. Handling Large Elasticsearch Data](#2-if-the-amount-of-user-data-in-a-time-range-becomes-very-large-what-is-your-solution-focused-on-elasticsearch)
+  - [3. Multiple Delivery Channels](#3-if-users-need-to-select-one-or-multiple-delivery-channels-what-approach-would-you-suggest)
+
 ## Stack
 
-- PHP 8.3+ / Laravel 11
-- PostgreSQL 15
-- Redis 7
-- Elasticsearch 9.5
-- Sanctum (API token auth)
-- Maatwebsite Excel (export)
+- PHP / Laravel
+- PostgreSQL
+- Redis
+- Elasticsearch
 - Docker / Docker Compose
 
 ## Setup
@@ -50,8 +60,6 @@ docker compose exec php_fpm php artisan elasticsearch:import-posts seed_data.jso
 | `reports:dispatch` | Dispatch due periodic reports (runs every minute via scheduler) |
 
 ## API Endpoints
-
-Base URL: `http://localhost/api/v1`
 
 All responses follow the format:
 
@@ -129,3 +137,50 @@ The architecture follows **Clean Architecture** with a clear separation:
 - **Application layer** — business logic, contracts (interfaces), DTOs
 - **Infrastructure layer** — concrete implementations (Eloquent, Elasticsearch, Mail, Excel)
 - **Http layer** — controllers, requests, middleware (presentation only)
+
+
+# Interview Answers
+
+## 1. How would you scale this system when the number of requests and users increases?
+
+### API Scaling
+
+- Multiple Laravel application instances can be deployed behind a load balancer. The API is stateless, so each instance handles requests independently.
+
+### Asynchronous Processing
+
+- Generating reports, creating Excel files, and sending emails are time-consuming operations. They should not run during the user's request lifecycle.
+The API only creates and stores the report configuration. Actual report generation happens asynchronously via queues.
+
+### Database Scaling
+
+- Add indexes for frequently queried columns.
+- Large tables can be partitioned by time or other suitable keys.
+
+### Scheduler Concurrency
+
+- To prevent multiple scheduler instances from processing the same report, PostgreSQL row locking is used:
+```FOR UPDATE SKIP LOCKED```.
+This lets multiple scheduler instances run simultaneously while ensuring each report is dispatched only once.
+
+## 2. If the amount of user data in a time range becomes very large, what is your solution? (Focused on Elasticsearch)
+
+### Time-based Indexing
+```
+posts-2026-01
+posts-2026-02
+posts-2026-03
+```
+
+This way, queries only hit the relevant time range instead of searching the entire dataset.
+
+### Index Lifecycle Management (ILM)
+
+Elasticsearch ILM manages the lifecycle of indices automatically. Older data can be moved to cheaper storage or deleted based on business requirements.
+
+## 3. If users need to select one or multiple delivery channels, what approach would you suggest?
+Use the Strategy pattern with a delivery interface (for example, `ReportDelivery`) that defines how a generated report is delivered.
+
+Each delivery channel (email, Slack, Telegram, webhook, etc.) can have its own implementation of this interface. The report generation flow does not need to know which channel is being used; it only sends the generated report to the selected delivery channels.
+
+Adding a new delivery channel would only require creating a new implementation without changing the existing report generation logic.
