@@ -1,58 +1,131 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Report Service
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel API for scheduled report generation. Users register, create periodic reports (daily/weekly) with keywords, and the system queries Elasticsearch for matching posts, exports them to Excel, and emails the result.
 
-## About Laravel
+## Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.3+ / Laravel 11
+- PostgreSQL 15
+- Redis 7
+- Elasticsearch 9.5
+- Sanctum (API token auth)
+- Maatwebsite Excel (export)
+- Docker / Docker Compose
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Setup
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+cp .env.example .env
+make setup
+docker compose exec php_fpm php artisan elasticsearch:create-posts-index
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### What `make setup` does
 
-## Contributing
+1. Starts all containers (`docker compose up -d --build`)
+2. Initializes Elasticsearch security (kibana_system password, role, user)
+3. Generates an Elasticsearch API key and writes it to `.env`
+4. Restarts queue worker and scheduler
+5. Generates `APP_KEY` if missing
+6. Runs database migrations
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Seed data
 
-## Code of Conduct
+```bash
+# Generate fake posts in Elasticsearch
+docker compose exec php_fpm php artisan elasticsearch:generate-posts --count=1000 --days=30
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Or import from a JSON file
+docker compose exec php_fpm php artisan elasticsearch:import-posts seed_data.json
+```
 
-## Security Vulnerabilities
+## Artisan Commands
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+| Command | Description |
+|---------|-------------|
+| `elasticsearch:create-posts-index` | Create the Elasticsearch posts index with mappings |
+| `elasticsearch:generate-posts` | Generate fake posts (options: `--count`, `--days`) |
+| `elasticsearch:import-posts {path}` | Import posts from a JSON file |
+| `elasticsearch:get-api-key` | Generate ES API key and save to `.env` |
+| `reports:dispatch` | Dispatch due periodic reports (runs every minute via scheduler) |
 
-## License
+## API Endpoints
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Base URL: `http://localhost/api/v1`
+
+All responses follow the format:
+
+```json
+{
+  "data": {},
+  "message": "string"
+}
+```
+
+### Authentication
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `POST` | `/auth/register` | Register a new user | No |
+| `POST` | `/auth/login` | Login and receive a token | No |
+| `POST` | `/auth/logout` | Revoke current token | Yes |
+
+### Users
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `GET` | `/users/me` | Get authenticated user | Yes |
+
+### Reports
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `POST` | `/reports` | Create a new report | Yes |
+| `GET` | `/reports` | List paginated reports | Yes |
+
+
+## Enums
+
+| Frequency | Value | Description |
+|-----------|-------|-------------|
+| DAILY | 1 | Report runs every day |
+| WEEKLY | 2 | Report runs every week |
+
+| Status | Value | Description |
+|--------|-------|-------------|
+| INACTIVE | 0 | Report is disabled |
+| ACTIVE | 1 | Report is active |
+
+## Architecture
+
+```
+app/
+├── Application/          # Business logic layer
+│   ├── Contracts/        # Interfaces (repositories, export, delivery)
+│   ├── DTOs/             # Immutable data transfer objects
+│   └── Services/         # Application services
+├── Console/Commands/     # Artisan commands
+├── Enums/                # Backed enums
+├── Exceptions/           # Domain exceptions
+├── Exports/              # Maatwebsite Excel exports
+├── Http/
+│   ├── Controllers/      # Thin controllers
+│   ├── Helpers/          # Response helpers
+│   ├── Middleware/        # EnsureJsonResponse
+│   └── Requests/         # Form request validation
+├── Infrastructure/       # Adapters
+│   ├── Eloquent/         # Repository implementations
+│   ├── Elasticsearch/    # ES client, indexing, queries
+│   ├── Exports/          # Excel exporter
+│   └── Mail/             # Email delivery
+├── Jobs/                 # Queue jobs
+├── Mail/                 # Mailables
+├── Models/               # Eloquent models
+└── Paginator/            # Custom pagination
+```
+
+The architecture follows **Clean Architecture** with a clear separation:
+
+- **Application layer** — business logic, contracts (interfaces), DTOs
+- **Infrastructure layer** — concrete implementations (Eloquent, Elasticsearch, Mail, Excel)
+- **Http layer** — controllers, requests, middleware (presentation only)
